@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./pod-dispatcher.schema.json
+id: podcast-guru
+name: Podcast Guru
+homepage: https://podcastguru.io
+
+target:
+  android:
+    package: com.reallybadapps.podcastguru
+  links:
+    show:
+      - 'https://app.podcastguru.io/podcast/{itunesId}'
+    episode: []
+  episodeFallback: show

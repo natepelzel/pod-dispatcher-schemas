@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./pod-dispatcher.schema.json
+id: castro
+name: Castro
+homepage: https://castro.fm
+
+source:
+  hosts:
+    - castro.fm
+  patterns:
+    # Show link: https://castro.fm/itunes/<appleID>
+    - level: show
+      path: '^/itunes/(?<showId>\d+)/?$'
+    # Episode share links (castro.fm/episode/<id>) use opaque internal ids
+    # and are not intercepted in the app manifest.
+  resolve:
+    type: itunes-api
+    params:
+      id: '{showId}'
+
+# Castro is iOS-only; no android package means this target is offered by the
+# iOS client only.
+target:
+  links:
+    show:
+      - 'castros://subscribe/{feedUrl|strip-scheme}'
+      - 'https://castro.fm/itunes/{itunesId}'
+    episode: []
+  episodeFallback: show

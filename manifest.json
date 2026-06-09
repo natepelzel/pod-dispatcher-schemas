@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "files": [
+    "antennapod.yml",
+    "apple-podcasts.yml",
+    "castbox.yml",
+    "castro.yml",
+    "overcast.yml",
+    "player-fm.yml",
+    "pocket-casts.yml",
+    "podbean.yml",
+    "podcast-addict.yml",
+    "podcast-guru.yml",
+    "podcast-republic.yml",
+    "spotify.yml",
+    "youtube-music.yml"
+  ]
+}

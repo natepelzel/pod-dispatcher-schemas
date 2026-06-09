@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./pod-dispatcher.schema.json
+id: player-fm
+name: Player FM
+homepage: https://player.fm
+
+target:
+  android:
+    package: fm.player
+  links:
+    show:
+      - 'https://player.fm/subscribe?id={feedUrl|urlencode}'
+    episode: []
+  episodeFallback: show

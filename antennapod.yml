@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=./pod-dispatcher.schema.json
+id: antennapod
+name: AntennaPod
+homepage: https://antennapod.org
+
+target:
+  android:
+    package: de.danoeh.antennapod
+  links:
+    show:
+      # Verified deep link into AntennaPod's subscribe flow.
+      - 'https://antennapod.org/deeplink/subscribe?url={feedUrl|urlencode}'
+    episode: []
+  episodeFallback: show

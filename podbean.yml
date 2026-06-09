@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./pod-dispatcher.schema.json
+id: podbean
+name: Podbean
+homepage: https://www.podbean.com
+
+target:
+  android:
+    package: com.podbean.app.podcast
+  links:
+    show:
+      - 'https://www.podbean.com/itunes/{itunesId}'
+    episode: []
+  episodeFallback: show

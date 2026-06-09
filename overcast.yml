@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=./pod-dispatcher.schema.json
+id: overcast
+name: Overcast
+homepage: https://overcast.fm
+
+source:
+  hosts:
+    - overcast.fm
+  patterns:
+    # Show link: https://overcast.fm/itunes<appleID> (optionally /slug suffix)
+    - level: show
+      path: '^/itunes(?<showId>\d+)(?:/.*)?$'
+    # Episode share links (overcast.fm/+<id>) use opaque internal ids and are
+    # not intercepted in the app manifest.
+  resolve:
+    type: itunes-api
+    params:
+      id: '{showId}'
+
+# Overcast is iOS-only; no android package means this target is offered by
+# the iOS client only. Kept here so both platforms share one schema repo.
+target:
+  links:
+    show:
+      - 'https://overcast.fm/itunes{itunesId}'
+    episode: []
+  episodeFallback: show

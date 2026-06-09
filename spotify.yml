@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./pod-dispatcher.schema.json
+id: spotify
+name: Spotify
+homepage: https://open.spotify.com
+
+source:
+  hosts:
+    - open.spotify.com
+  patterns:
+    # Show link: https://open.spotify.com/show/<id> (optionally /intl-xx/)
+    - level: show
+      path: '^/(?:intl-[a-z]{2,3}/)?show/(?<showId>[A-Za-z0-9]+)/?$'
+    # TODO episode links (/episode/<id>): the episode URL carries no show id,
+    # and no public keyless API maps Spotify episode ids to a feed. Episode
+    # paths are deliberately not intercepted in the app manifest.
+  resolve:
+    # Spotify exposes no RSS feeds, but Podnews indexes podcasts by Spotify id
+    # and serves the canonical feed in a <link rel="alternate"> tag, plus
+    # Apple-id-keyed app links we can mine for {itunesId}.
+    type: scrape
+    url: 'https://podnews.net/podcast/{showId}'
+    feedUrl:
+      - css: 'link[rel=alternate][type="application/rss+xml"]'
+        attr: href
+    itunesId:
+      - css: 'a[href^="https://pca.st/itunes/"]'
+        attr: href
+        pattern: 'itunes/(\d+)'

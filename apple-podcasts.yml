@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=./pod-dispatcher.schema.json
+id: apple-podcasts
+name: Apple Podcasts
+homepage: https://www.apple.com/apple-podcasts/
+
+source:
+  hosts:
+    - podcasts.apple.com
+    - itunes.apple.com
+  patterns:
+    # Episode link: https://podcasts.apple.com/us/podcast/<slug>/id<showId>?i=<episodeId>
+    # Listed first because patterns are tried in order and this one is stricter.
+    - level: episode
+      path: '^/(?:(?<country>[a-z]{2})/)?podcast/(?:[^/]+/)?id(?<showId>\d+)/?$'
+      query:
+        i: '^(?<episodeId>\d+)$'
+    # Show link: https://podcasts.apple.com/us/podcast/<slug>/id<showId>
+    - level: show
+      path: '^/(?:(?<country>[a-z]{2})/)?podcast/(?:[^/]+/)?id(?<showId>\d+)/?$'
+  resolve:
+    # iTunes Lookup API. Show: lookup?id={id}&entity=podcast → feedUrl.
+    # Episode: lookup?id={id}&entity=podcastEpisode returns recent episodes;
+    # the one whose trackId equals {episodeId} (Apple's ?i= parameter) carries
+    # the episode GUID, title, and enclosure URL. Episodes older than the
+    # lookup window degrade to show level.
+    type: itunes-api
+    params:
+      id: '{showId}'
+      episodeId: '{episodeId}'

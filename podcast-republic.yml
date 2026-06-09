@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=./pod-dispatcher.schema.json
+id: podcast-republic
+name: Podcast Republic
+homepage: https://www.podcastrepublic.net
+
+target:
+  android:
+    package: com.itunestoppodcastplayer.app
+  links:
+    show:
+      - 'https://www.podcastrepublic.net/podcast/{itunesId}'
+    episode: []
+  episodeFallback: show

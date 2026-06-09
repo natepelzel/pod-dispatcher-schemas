@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/pod-dispatcher/pod-dispatcher-schemas/main/pod-dispatcher.schema.json",
+  "title": "Pod Dispatcher app schema",
+  "description": "Declarative description of one podcast app/platform: how to parse its incoming URLs (source) and/or how to deep link into it (target). A schema must define at least one of the two blocks. No executable code is permitted — only patterns and templates interpreted by the native engine.",
+  "type": "object",
+  "required": ["id", "name"],
+  "anyOf": [
+    { "required": ["source"] },
+    { "required": ["target"] }
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Stable kebab-case identifier. Must match the filename (e.g. id 'apple-podcasts' lives in apple-podcasts.yml)."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable app/platform name shown in the UI."
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "description": "Official homepage of the app/platform."
+    },
+    "source": { "$ref": "#/$defs/source" },
+    "target": { "$ref": "#/$defs/target" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "templateString": {
+      "type": "string",
+      "description": "String with {variable} placeholders, optionally filtered: {var|urlencode}, {var|strip-scheme} or {var|base64url}."
+    },
+    "source": {
+      "type": "object",
+      "description": "How to recognise this platform's share URLs and resolve them to a canonical podcast identity (RSS feed URL plus optional episode info).",
+      "required": ["hosts", "patterns", "resolve"],
+      "properties": {
+        "hosts": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[a-z0-9.-]+$" },
+          "description": "Hostnames this source matches (lowercase, no scheme). NOTE: hosts must also be declared in the Android app manifest, so adding a new host requires an app release."
+        },
+        "patterns": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/pattern" },
+          "description": "URL patterns tried in order; the first match wins. Put more specific patterns (e.g. episode) before broader ones (e.g. show)."
+        },
+        "resolve": { "$ref": "#/$defs/resolve" }
+      },
+      "additionalProperties": false
+    },
+    "pattern": {
+      "type": "object",
+      "required": ["level", "path"],
+      "properties": {
+        "level": {
+          "enum": ["show", "episode"],
+          "description": "What kind of link this pattern identifies."
+        },
+        "path": {
+          "type": "string",
+          "description": "Regex matched against the URL path (Java/Kotlin syntax). Use named capture groups: (?<showId>\\d+). Captured values become template variables for the resolver."
+        },
+        "query": {
+          "type": "object",
+          "description": "Map of required query parameter name → regex matched against its value. All listed parameters must be present and match. Named capture groups are merged into the captures.",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "resolve": {
+      "type": "object",
+      "required": ["type"],
+      "description": "How to turn captured values into a canonical podcast identity. Resolver types are implemented natively; schemas only configure them.",
+      "oneOf": [
+        {
+          "properties": {
+            "type": { "const": "itunes-api" },
+            "params": {
+              "type": "object",
+              "required": ["id"],
+              "properties": {
+                "id": {
+                  "$ref": "#/$defs/templateString",
+                  "description": "iTunes collection id, e.g. '{showId}'. The engine calls the iTunes Lookup API and reads results[0].feedUrl."
+                },
+                "episodeId": {
+                  "$ref": "#/$defs/templateString",
+                  "description": "Optional iTunes episode trackId (Apple's ?i= URL parameter), e.g. '{episodeId}'. When set, episode-level links are resolved via entity=podcastEpisode, yielding {episodeGuid}, {episodeTitle} and {episodeUrl}. Episodes outside the lookup window degrade to show level."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["type", "params"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": { "const": "scrape" },
+            "url": {
+              "$ref": "#/$defs/templateString",
+              "description": "Optional template for the page to fetch (e.g. a directory page keyed by a captured id). Defaults to the incoming URL itself."
+            },
+            "feedUrl": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Extraction steps tried in order against the fetched page; the first non-empty result wins.",
+              "items": { "$ref": "#/$defs/scrapeStep" }
+            },
+            "itunesId": {
+              "type": "array",
+              "description": "Optional extraction steps for the show's iTunes id, enabling Apple-id-keyed target links.",
+              "items": { "$ref": "#/$defs/scrapeStep" }
+            }
+          },
+          "required": ["type", "feedUrl"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": { "const": "podcast-index" },
+            "params": {
+              "type": "object",
+              "description": "Reserved. Podcast Index resolution requires API credentials and is not yet enabled in the engine.",
+              "additionalProperties": { "$ref": "#/$defs/templateString" }
+            }
+          },
+          "required": ["type"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "scrapeStep": {
+      "type": "object",
+      "oneOf": [
+        {
+          "required": ["css"],
+          "properties": {
+            "css": {
+              "type": "string",
+              "description": "CSS selector; the first matching element is used."
+            },
+            "attr": {
+              "type": "string",
+              "default": "href",
+              "description": "Attribute to read from the element, or 'text' for its text content. URL-valued attributes are resolved to absolute URLs."
+            },
+            "pattern": { "$ref": "#/$defs/scrapePattern" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "required": ["jsonld"],
+          "properties": {
+            "jsonld": {
+              "type": "string",
+              "description": "Dotted path evaluated against each <script type=\"application/ld+json\"> block, e.g. 'associatedMedia.contentUrl' or 'itemListElement.0.url'. Numeric segments index into arrays."
+            },
+            "pattern": { "$ref": "#/$defs/scrapePattern" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "scrapePattern": {
+      "type": "string",
+      "description": "Optional regex applied to the extracted value; the first capture group becomes the result. The step fails if the regex doesn't match."
+    },
+    "target": {
+      "type": "object",
+      "description": "How to deep link into this app given a canonical podcast identity. Available template variables: {feedUrl} (always), {itunesId}, {episodeGuid}, {episodeTitle}, {episodeUrl} (when resolved). A template whose variables are unavailable is skipped.",
+      "required": ["links"],
+      "properties": {
+        "android": {
+          "type": "object",
+          "required": ["package"],
+          "properties": {
+            "package": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$",
+              "description": "Android application id. The deep link intent is pinned to this package. Must also be listed in the app manifest <queries> block (Android 11+ package visibility)."
+            }
+          },
+          "additionalProperties": false
+        },
+        "links": {
+          "type": "object",
+          "description": "Deep link templates per level, tried in order until one launches.",
+          "anyOf": [
+            { "required": ["show"] },
+            { "required": ["episode"] }
+          ],
+          "properties": {
+            "show": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/templateString" }
+            },
+            "episode": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/templateString" }
+            }
+          },
+          "additionalProperties": false
+        },
+        "episodeFallback": {
+          "enum": ["show", "none"],
+          "default": "show",
+          "description": "What to do when an episode link cannot be built: 'show' opens the show instead (graceful fallback), 'none' fails."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

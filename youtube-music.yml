@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=./pod-dispatcher.schema.json
+id: youtube-music
+name: YouTube Music
+homepage: https://music.youtube.com
+
+target:
+  android:
+    package: com.google.android.apps.youtube.music
+  links:
+    show:
+      # Adds/opens the show by RSS feed (URL-safe base64, no padding).
+      - 'https://music.youtube.com/library/podcasts?addrssfeed={feedUrl|base64url}'
+    # Episode pages use YouTube's internal ids; fall back to the show.
+    episode: []
+  episodeFallback: show

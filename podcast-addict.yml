@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./pod-dispatcher.schema.json
+id: podcast-addict
+name: Podcast Addict
+homepage: https://podcastaddict.com
+
+target:
+  android:
+    package: com.bambuna.podcastaddict
+  links:
+    show:
+      # Opens the show's full detail page (verified app link, handled by
+      # EpisodeSearchResultDetailActivity).
+      - 'https://podcastaddict.com/feed/{feedUrl|urlencode}'
+      # Fallback: custom scheme, opens the add-podcast dialog pre-filled.
+      # Ref: https://github.com/nathangathright/podcast-platform-links/blob/main/schemes.md
+      - 'podcastaddict://{feedUrl|strip-scheme}'
+    episode:
+      # Opens the episode page, keyed by the enclosure (audio) URL.
+      # Ref: https://github.com/nathangathright/podcast-platform-links
+      - 'https://podcastaddict.com/episode/{episodeUrl|urlencode}'
+  episodeFallback: show

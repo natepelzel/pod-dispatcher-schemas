@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=./pod-dispatcher.schema.json
+id: pocket-casts
+name: Pocket Casts
+homepage: https://pocketcasts.com
+
+source:
+  hosts:
+    - pca.st
+  patterns:
+    # Apple-id-keyed link: https://pca.st/itunes/<appleID>
+    - level: show
+      path: '^/itunes/(?<showId>\d+)/?$'
+    # Native short links (pca.st/<code>, pca.st/episode/<uuid>) need the
+    # Pocket Casts API and are not intercepted in the app manifest.
+  resolve:
+    type: itunes-api
+    params:
+      id: '{showId}'
+
+target:
+  android:
+    package: au.com.shiftyjelly.pocketcasts
+  links:
+    show:
+      # Opens (or offers to subscribe to) the show identified by its RSS feed.
+      - 'pktc://subscribe/{feedUrl|strip-scheme}'
+    # Pocket Casts has no public episode-level deep link; episode links fall
+    # back to opening the show.
+    episode: []
+  episodeFallback: show
