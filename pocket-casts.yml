@@ -12,6 +12,9 @@ source:
       path: '^/itunes/(?<showId>\d+)/?$'
     # Native short links (pca.st/<code>, pca.st/episode/<uuid>) need the
     # Pocket Casts API and are not intercepted in the app manifest.
+  android:
+    paths:
+      - prefix: /itunes
   resolve:
     type: itunes-api
     params:

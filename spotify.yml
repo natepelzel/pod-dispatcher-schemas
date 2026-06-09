@@ -13,6 +13,12 @@ source:
     # TODO episode links (/episode/<id>): the episode URL carries no show id,
     # and no public keyless API maps Spotify episode ids to a feed. Episode
     # paths are deliberately not intercepted in the app manifest.
+  # Only podcast show paths are intercepted on Android — music links on the
+  # same host stay untouched. Keep in sync with the patterns above.
+  android:
+    paths:
+      - prefix: /show
+      - pattern: '/intl-.*/show/.*'
   resolve:
     # Spotify exposes no RSS feeds, but Podnews indexes podcasts by Spotify id
     # and serves the canonical feed in a <link rel="alternate"> tag, plus

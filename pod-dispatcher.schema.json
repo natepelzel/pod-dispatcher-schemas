@@ -43,7 +43,7 @@
           "type": "array",
           "minItems": 1,
           "items": { "type": "string", "pattern": "^[a-z0-9.-]+$" },
-          "description": "Hostnames this source matches (lowercase, no scheme). NOTE: hosts must also be declared in the Android app manifest, so adding a new host requires an app release."
+          "description": "Hostnames this source matches (lowercase, no scheme). The Android app generates its manifest intent filters from this list at build time; a brand-new host therefore still needs the next app release to be intercepted (Android limitation), but no manual manifest edit."
         },
         "patterns": {
           "type": "array",
@@ -51,7 +51,48 @@
           "items": { "$ref": "#/$defs/pattern" },
           "description": "URL patterns tried in order; the first match wins. Put more specific patterns (e.g. episode) before broader ones (e.g. show)."
         },
+        "android": { "$ref": "#/$defs/androidSource" },
         "resolve": { "$ref": "#/$defs/resolve" }
+      },
+      "additionalProperties": false
+    },
+    "androidSource": {
+      "type": "object",
+      "description": "Android-specific interception hints, consumed when the app generates its manifest intent filters at build time. Without it, every path on the source's hosts is intercepted.",
+      "required": ["paths"],
+      "properties": {
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Narrows interception to these URL paths so unrelated links on shared hosts (e.g. Spotify music) stay untouched. Entries combine as OR. Keep them in sync with what 'patterns' can actually parse.",
+          "items": {
+            "type": "object",
+            "oneOf": [
+              {
+                "required": ["prefix"],
+                "properties": {
+                  "prefix": {
+                    "type": "string",
+                    "pattern": "^/",
+                    "description": "Literal path prefix (android:pathPrefix)."
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "required": ["pattern"],
+                "properties": {
+                  "pattern": {
+                    "type": "string",
+                    "pattern": "^/",
+                    "description": "Android glob pattern (android:pathPattern syntax: '.' any char, '.*' wildcard, '\\\\' escape — NOT a full regex)."
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
       },
       "additionalProperties": false
     },
@@ -186,7 +227,7 @@
             "package": {
               "type": "string",
               "pattern": "^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$",
-              "description": "Android application id. The deep link intent is pinned to this package. Must also be listed in the app manifest <queries> block (Android 11+ package visibility)."
+              "description": "Android application id. The deep link intent is pinned to this package. The app generates its manifest <queries> entry (Android 11+ package visibility) from this field at build time."
             }
           },
           "additionalProperties": false

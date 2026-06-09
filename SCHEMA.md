@@ -54,6 +54,9 @@ source:
         i: '^(?<episodeId>\d+)$'
     - level: show
       path: '^/(?:(?<country>[a-z]{2})/)?podcast/(?:[^/]+/)?id(?<showId>\d+)/?$'
+  android:                     # optional — narrows what the Android app intercepts
+    paths:
+      - prefix: /podcast
   resolve:
     type: itunes-api
     params:
@@ -73,10 +76,32 @@ source:
    regexes are collected into the capture map, and are then available as
    `{showId}` etc. in resolver templates.
 
-> ⚠️ Android limitation: intercepted hosts must also be declared in the
-> Android app's `AndroidManifest.xml`. A new schema with a brand-new host
-> works only after the next app release; OTA updates can only change how
-> known hosts parse.
+### `android.paths` — interception narrowing
+
+The Android app **generates its manifest intent filters from the schemas at
+build time** — hosts come from `hosts`, and the optional `android.paths`
+block narrows interception to specific URL paths so unrelated links on a
+shared host (e.g. Spotify music) keep opening normally:
+
+```yaml
+source:
+  hosts:
+    - open.spotify.com
+  android:
+    paths:                          # entries combine as OR
+      - prefix: /show               # android:pathPrefix — literal prefix
+      - pattern: '/intl-.*/show/.*' # android:pathPattern — Android glob
+                                    # ('.' any char, '.*' wildcard), NOT a regex
+```
+
+Without an `android` block, every path on the source's hosts is intercepted.
+Keep `paths` in sync with what `patterns` can actually parse — intercepting a
+link the resolver then fails on bounces the user through the fallback dialog.
+
+> ⚠️ Android limitation: intent filters are baked in at build time, so a
+> schema with a brand-new host is intercepted only from the next app release
+> (no manual manifest edit needed — it's generated). OTA updates can only
+> change how already-released hosts parse.
 
 ### Resolvers
 
@@ -160,8 +185,9 @@ target:
   `episodeFallback: show` (the default) falls back to the show links;
   `none` fails instead.
 
-> ⚠️ Android limitation: the target package must also be listed in the app
-> manifest's `<queries>` block (Android 11+ package visibility).
+The Android app generates its manifest `<queries>` entry (Android 11+
+package visibility) from `android.package` at build time — nothing to
+declare manually.
 
 ### Canonical template variables
 
@@ -188,8 +214,9 @@ Syntax: `{variable}` or `{variable|filter}`.
 1. Create `<id>.yml` with `id` matching the filename.
 2. Add the filename to `manifest.json`.
 3. Run `python tools/validate_schemas.py`.
-4. If it's a **source** with new hosts, or a **target** with a new package:
-   note in the PR that the Android app's `AndroidManifest.xml` needs the
-   host / `<queries>` entry — that part ships with the next app release.
+4. For a **source**: add an `android.paths` block if the host serves
+   non-podcast links too. The schema is all you edit — the Android manifest
+   (intent filters, `<queries>`) is generated from the schemas at build
+   time. New hosts start being intercepted with the next app release.
 5. Include a couple of real example URLs in the PR description so reviewers
    can verify the patterns.

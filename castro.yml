@@ -12,6 +12,9 @@ source:
       path: '^/itunes/(?<showId>\d+)/?$'
     # Episode share links (castro.fm/episode/<id>) use opaque internal ids
     # and are not intercepted in the app manifest.
+  android:
+    paths:
+      - prefix: /itunes
   resolve:
     type: itunes-api
     params:

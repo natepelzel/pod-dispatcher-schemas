@@ -12,6 +12,9 @@ source:
       path: '^/vic/(?<showId>\d+)/?$'
     # Native share links (castbox.fm/channel|episode/...-id<n>) use Castbox's
     # internal ids and are not intercepted in the app manifest.
+  android:
+    paths:
+      - prefix: /vic
   resolve:
     type: itunes-api
     params:
