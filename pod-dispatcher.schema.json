@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/pod-dispatcher/pod-dispatcher-schemas/main/pod-dispatcher.schema.json",
+  "$id": "https://raw.githubusercontent.com/natepelzel/pod-dispatcher-schemas/main/pod-dispatcher.schema.json",
   "title": "Pod Dispatcher app schema",
   "description": "Declarative description of one podcast app/platform: how to parse its incoming URLs (source) and/or how to deep link into it (target). A schema must define at least one of the two blocks. No executable code is permitted — only patterns and templates interpreted by the native engine.",
   "type": "object",

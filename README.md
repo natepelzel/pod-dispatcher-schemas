@@ -1,7 +1,7 @@
 # Pod Dispatcher schemas
 
 The shared, platform-neutral schema repository for
-[Pod Dispatcher](https://github.com/pod-dispatcher/pod-dispatcher): one
+[Pod Dispatcher](https://github.com/natepelzel/pod-dispatcher): one
 declarative YAML file per podcast app/platform describing how to *parse* its
 share links (`source`), how to *deep link* into it (`target`), or both.
 
