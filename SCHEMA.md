@@ -99,9 +99,11 @@ Keep `paths` in sync with what `patterns` can actually parse — intercepting a
 link the resolver then fails on bounces the user through the fallback dialog.
 
 > ⚠️ Android limitation: intent filters are baked in at build time, so a
-> schema with a brand-new host is intercepted only from the next app release
-> (no manual manifest edit needed — it's generated). OTA updates can only
-> change how already-released hosts parse.
+> schema with a brand-new host is *intercepted* only from the next app
+> release (no manual manifest edit needed — it's generated). OTA updates can
+> change how already-released hosts parse, and an OTA-delivered source works
+> immediately via the share sheet (sharing isn't host-restricted) — only
+> automatic interception waits for the release.
 
 ### Resolvers
 
