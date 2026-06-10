@@ -8,24 +8,36 @@ source:
     - podcastaddict.com
     - www.podcastaddict.com
   patterns:
+    # Episode share link: https://podcastaddict.com/<show-slug>/episode/<id>
+    # (the site also links the bare /episode/<id> form, which 301s to it).
+    # \d+ keeps this clear of the legacy enclosure-URL-keyed episode links.
+    - level: episode
+      path: '^/(?:[^/]+/)?episode/(?<episodeId>\d+)/?$'
     # Show share link: https://podcastaddict.com/podcast/<slug>/<id>
     - level: show
       path: '^/podcast/[^/]+/\d+/?$'
-    # Episode share links (/episode/<enclosure>&podcastId=…) are not
-    # intercepted; the show page covers the common share flow.
   android:
-    # Only /podcast pages — our own outgoing deep links use /feed and
-    # /episode on the same host and must stay un-intercepted.
+    # /podcast pages plus slug-form episode pages. Deliberately NOT a bare
+    # /episode prefix: our own outgoing episode deep link is
+    # /episode/<enclosure-url> on this host and a path glob can't tell
+    # digits from URLs — bare /episode/<id> links still work via redirect
+    # or the share sheet.
     paths:
       - prefix: /podcast
+      - pattern: '/.*/episode/.*'
   resolve:
-    # The share page carries the canonical feed in a standard alternate tag.
+    # Share pages carry the canonical feed in a standard alternate tag;
+    # episode pages additionally expose the episode as JSON-LD.
     # Note: podcastaddict.com rejects bare library user agents; the engine
     # sends its own identifying UA, which is accepted.
     type: scrape
     feedUrl:
       - css: 'link[type="application/rss+xml"]'
         attr: href
+    episodeUrl:
+      - jsonld: 'associatedMedia.contentUrl'
+    episodeTitle:
+      - jsonld: 'name'
 
 target:
   android:

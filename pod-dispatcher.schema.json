@@ -160,6 +160,21 @@
               "type": "array",
               "description": "Optional extraction steps for the show's iTunes id, enabling Apple-id-keyed target links.",
               "items": { "$ref": "#/$defs/scrapeStep" }
+            },
+            "episodeUrl": {
+              "type": "array",
+              "description": "Optional extraction steps for the episode's enclosure (audio) URL. Episode steps are consulted only when an episode-level pattern matched; extracting at least one episode value keeps the resolution at episode level, otherwise it degrades to show level.",
+              "items": { "$ref": "#/$defs/scrapeStep" }
+            },
+            "episodeTitle": {
+              "type": "array",
+              "description": "Optional extraction steps for the episode title. Same episode-level semantics as episodeUrl.",
+              "items": { "$ref": "#/$defs/scrapeStep" }
+            },
+            "episodeGuid": {
+              "type": "array",
+              "description": "Optional extraction steps for the episode GUID. Same episode-level semantics as episodeUrl.",
+              "items": { "$ref": "#/$defs/scrapeStep" }
             }
           },
           "required": ["type", "feedUrl"],

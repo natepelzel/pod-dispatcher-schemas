@@ -152,11 +152,23 @@ resolve:
       attr: href
       pattern: 'itunes/(\d+)'                   # optional regex; first capture
                                                 # group becomes the value
+  episodeUrl:                                   # optional — episode-aware scraping;
+    - jsonld: 'associatedMedia.contentUrl'      # see below
+  episodeTitle:
+    - jsonld: 'name'
+  episodeGuid: []
 ```
 
 The `url` template makes "lookup pages" possible: the Spotify schema, for
 example, can't get a feed from spotify.com, so it scrapes the Podnews page
 for the captured Spotify show id instead.
+
+The episode step lists (`episodeUrl`, `episodeTitle`, `episodeGuid`) are
+consulted **only when an episode-level pattern matched**. Extracting at least
+one episode value keeps the resolution at episode level (populating
+`{episodeUrl}` / `{episodeTitle}` / `{episodeGuid}` for target templates);
+when none of them yields anything, resolution gracefully degrades to show
+level — same behaviour as the iTunes resolver outside its lookup window.
 
 #### `direct`
 
