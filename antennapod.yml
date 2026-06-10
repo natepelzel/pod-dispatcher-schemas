@@ -3,6 +3,27 @@ id: antennapod
 name: AntennaPod
 homepage: https://antennapod.org
 
+source:
+  hosts:
+    - antennapod.org
+    - www.antennapod.org
+  patterns:
+    # Subscribe deeplink: https://antennapod.org/deeplink/subscribe?url=<feed>
+    # Useful when the recipient's player isn't AntennaPod. (When it is, the
+    # link is app-link-verified to AntennaPod and never reaches us.)
+    - level: show
+      path: '^/deeplink/subscribe/?$'
+      query:
+        url: '^(?<feedUrl>.+)$'
+  android:
+    paths:
+      - prefix: /deeplink
+  resolve:
+    # The link itself carries the feed URL — no lookup needed.
+    type: direct
+    params:
+      feedUrl: '{feedUrl}'
+
 target:
   android:
     package: de.danoeh.antennapod

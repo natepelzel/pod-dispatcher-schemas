@@ -167,6 +167,28 @@
         },
         {
           "properties": {
+            "type": { "const": "direct" },
+            "params": {
+              "type": "object",
+              "required": ["feedUrl"],
+              "properties": {
+                "feedUrl": {
+                  "$ref": "#/$defs/templateString",
+                  "description": "Template over captured groups that *is* the feed URL — for links that already carry it (subscribe deeplinks). No network round trip."
+                },
+                "itunesId": {
+                  "$ref": "#/$defs/templateString",
+                  "description": "Optional iTunes id template, when the link carries one."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["type", "params"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
             "type": { "const": "podcast-index" },
             "params": {
               "type": "object",
@@ -215,6 +237,30 @@
       "type": "string",
       "description": "Optional regex applied to the extracted value; the first capture group becomes the result. The step fails if the regex doesn't match."
     },
+    "targetResolve": {
+      "type": "object",
+      "description": "Optional target-side resolution: scrapes a page reachable from the canonical identity to mint extra link-template variables (e.g. a Spotify show id). Variables that can't be minted are absent and templates referencing them are skipped.",
+      "required": ["type", "url", "vars"],
+      "properties": {
+        "type": { "const": "scrape" },
+        "url": {
+          "$ref": "#/$defs/templateString",
+          "description": "Page to fetch, templated over the canonical variables ({feedUrl}, {itunesId}, …). If a referenced variable is unavailable for a given link, resolution is skipped."
+        },
+        "vars": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Variable name → extraction steps tried in order (same step format as source scraping).",
+          "propertyNames": { "pattern": "^[a-z][A-Za-z0-9]*$" },
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/scrapeStep" }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "target": {
       "type": "object",
       "description": "How to deep link into this app given a canonical podcast identity. Available template variables: {feedUrl} (always), {itunesId}, {episodeGuid}, {episodeTitle}, {episodeUrl} (when resolved). A template whose variables are unavailable is skipped.",
@@ -232,6 +278,7 @@
           },
           "additionalProperties": false
         },
+        "resolve": { "$ref": "#/$defs/targetResolve" },
         "links": {
           "type": "object",
           "description": "Deep link templates per level, tried in order until one launches.",

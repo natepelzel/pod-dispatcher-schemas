@@ -32,3 +32,24 @@ source:
       - css: 'a[href^="https://pca.st/itunes/"]'
         attr: href
         pattern: 'itunes/(\d+)'
+
+target:
+  android:
+    package: com.spotify.music
+  # Spotify's catalog ids aren't derivable from the RSS feed and the Web API
+  # needs credentials, but the Podnews directory page — reachable keylessly
+  # by iTunes id — links the show's Spotify page.
+  resolve:
+    type: scrape
+    url: 'https://podnews.net/podcast/{itunesId}'
+    vars:
+      spotifyShowId:
+        - css: 'a[href^="https://open.spotify.com/show/"]'
+          attr: href
+          pattern: 'show/([A-Za-z0-9]+)'
+  links:
+    show:
+      - 'https://open.spotify.com/show/{spotifyShowId}'
+    # No public episode-id mapping; episode links open the show.
+    episode: []
+  episodeFallback: show

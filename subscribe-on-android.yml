@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=./pod-dispatcher.schema.json
+id: subscribe-on-android
+name: Subscribe on Android
+homepage: https://subscribeonandroid.com
+
+# Publisher-side universal subscribe links: the path *is* the feed URL with
+# the scheme stripped (https assumed, per the SoA convention). Source-only —
+# this is a link service, not a player.
+source:
+  hosts:
+    - subscribeonandroid.com
+    - www.subscribeonandroid.com
+  patterns:
+    - level: show
+      path: '^/(?<feed>.+)$'
+  resolve:
+    type: direct
+    params:
+      feedUrl: 'https://{feed}'

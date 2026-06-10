@@ -89,13 +89,30 @@ def check_file(path: pathlib.Path, validator: Draft202012Validator) -> list[str]
 
     target = data.get("target")
     if target:
+        minted_vars: set[str] = set()
+        resolve = target.get("resolve")
+        if resolve:
+            minted_vars = set(resolve.get("vars", {}))
+            for shadowed in sorted(minted_vars & CANONICAL_VARS):
+                errors.append(
+                    f"target.resolve.vars: '{shadowed}' shadows a canonical variable"
+                )
+            for var, _ in template_refs(resolve["url"]):
+                if var not in CANONICAL_VARS:
+                    errors.append(
+                        f"target.resolve.url: references '{{{var}}}' which is not a "
+                        f"canonical variable ({', '.join(sorted(CANONICAL_VARS))})"
+                    )
+
+        allowed_vars = CANONICAL_VARS | minted_vars
         for level in ("show", "episode"):
             for i, template in enumerate(target["links"].get(level, [])):
                 for var, flt in template_refs(template):
-                    if var not in CANONICAL_VARS:
+                    if var not in allowed_vars:
                         errors.append(
                             f"links.{level}[{i}]: unknown variable '{{{var}}}' "
-                            f"(canonical variables: {', '.join(sorted(CANONICAL_VARS))})"
+                            f"(canonical variables: {', '.join(sorted(CANONICAL_VARS))}"
+                            f"{'; target.resolve vars: ' + ', '.join(sorted(minted_vars)) if minted_vars else ''})"
                         )
                     if flt is not None and flt not in KNOWN_FILTERS:
                         errors.append(f"links.{level}[{i}]: unknown filter '{flt}'")

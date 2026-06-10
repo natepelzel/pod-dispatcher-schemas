@@ -3,6 +3,30 @@ id: podcast-addict
 name: Podcast Addict
 homepage: https://podcastaddict.com
 
+source:
+  hosts:
+    - podcastaddict.com
+    - www.podcastaddict.com
+  patterns:
+    # Show share link: https://podcastaddict.com/podcast/<slug>/<id>
+    - level: show
+      path: '^/podcast/[^/]+/\d+/?$'
+    # Episode share links (/episode/<enclosure>&podcastId=…) are not
+    # intercepted; the show page covers the common share flow.
+  android:
+    # Only /podcast pages — our own outgoing deep links use /feed and
+    # /episode on the same host and must stay un-intercepted.
+    paths:
+      - prefix: /podcast
+  resolve:
+    # The share page carries the canonical feed in a standard alternate tag.
+    # Note: podcastaddict.com rejects bare library user agents; the engine
+    # sends its own identifying UA, which is accepted.
+    type: scrape
+    feedUrl:
+      - css: 'link[type="application/rss+xml"]'
+        attr: href
+
 target:
   android:
     package: com.bambuna.podcastaddict

@@ -158,6 +158,20 @@ The `url` template makes "lookup pages" possible: the Spotify schema, for
 example, can't get a feed from spotify.com, so it scrapes the Podnews page
 for the captured Spotify show id instead.
 
+#### `direct`
+
+For links that already carry the feed URL — subscribe deeplinks like
+`antennapod.org/deeplink/subscribe?url=…` or `subscribeonandroid.com/<feed>`.
+No network round trip; the captures *are* the canonical identity.
+
+```yaml
+resolve:
+  type: direct
+  params:
+    feedUrl: 'https://{feed}'   # template over captured groups
+    itunesId: '{appleId}'       # optional, when the link carries one
+```
+
 #### `podcast-index`
 
 Reserved. Podcast Index requires API credentials (which must live in the app
@@ -190,6 +204,37 @@ target:
 The Android app generates its manifest `<queries>` entry (Android 11+
 package visibility) from `android.package` at build time — nothing to
 declare manually.
+
+### Target-side resolution (`target.resolve`)
+
+Some apps key their deep links to a **proprietary catalog id** that can't be
+derived from the RSS feed (Spotify is the canonical example). A target may
+declare a `resolve` block that scrapes a page reachable from the canonical
+identity and mints extra template variables:
+
+```yaml
+target:
+  android:
+    package: com.spotify.music
+  resolve:
+    type: scrape
+    url: 'https://podnews.net/podcast/{itunesId}'  # templated over canonical vars
+    vars:
+      spotifyShowId:                               # name usable in links below
+        - css: 'a[href^="https://open.spotify.com/show/"]'
+          attr: href
+          pattern: 'show/([A-Za-z0-9]+)'
+  links:
+    show:
+      - 'https://open.spotify.com/show/{spotifyShowId}'
+```
+
+Resolution is soft-fail: if the page can't be fetched, a step doesn't match,
+or the `url` template references an unavailable canonical variable, the
+minted variables are simply absent — and link templates referencing them are
+skipped per the normal template rules (falling through to the next candidate
+or the failure dialog). The lookup costs one extra network round trip, paid
+only when the user's chosen target declares it.
 
 ### Canonical template variables
 

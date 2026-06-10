@@ -27,3 +27,12 @@ source:
     params:
       id: '{showId}'
       episodeId: '{episodeId}'
+
+# Apple Podcasts has no Android app; without an android package pin this
+# target is offered by the future iOS client only (like Overcast and Castro).
+target:
+  links:
+    show:
+      - 'https://podcasts.apple.com/podcast/id{itunesId}'
+    episode: []
+  episodeFallback: show
